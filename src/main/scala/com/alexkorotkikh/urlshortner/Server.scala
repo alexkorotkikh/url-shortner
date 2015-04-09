@@ -3,8 +3,12 @@ package com.alexkorotkikh.urlshortner
 import java.net.URL
 
 import com.top10.redis.SingleRedis
-import com.twitter.finatra.{Controller, FinatraServer}
-import com.twitter.util.Try
+import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
+import com.twitter.finagle.{Service, SimpleFilter}
+import com.twitter.finatra.{Controller, FinatraServer, ResponseBuilder}
+import com.twitter.util.{Future, Try}
+import org.apache.commons.codec.binary.Base64
+import org.jboss.netty.handler.codec.http.HttpMethod
 
 import scala.annotation.tailrec
 import scala.util.Random
@@ -60,7 +64,24 @@ trait RedisSupport {
   )
 }
 
+class BasicAuthSupport(login: String, password: String) extends SimpleFilter[FinagleRequest, FinagleResponse] {
+  private val expectedHeader = s"Basic ${Base64.encodeBase64String(s"$login:$password".getBytes)}"
+
+  override def apply(request: FinagleRequest, service: Service[FinagleRequest, FinagleResponse]): Future[FinagleResponse] = {
+    if (request.method == HttpMethod.GET) service(request)
+    else request.headerMap.get("Authorization") match {
+      case None => Future(ResponseBuilder(401, "Unauthorized"))
+      case Some(auth) if auth != expectedHeader => Future(ResponseBuilder(403, "Forbidden"))
+      case Some(_) => service(request)
+    }
+  }
+}
+
 trait ServerConfig extends FinatraServer {
+  val login = sys.env.getOrElse("HTTP_LOGIN", "johndoe")
+  val password = sys.env.getOrElse("HTTP_PASSWORD", "secret")
+  addFilter(new BasicAuthSupport(login, password))
+
   register(new UrlController with RedisSupport)
 }
 
