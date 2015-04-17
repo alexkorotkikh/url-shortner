@@ -83,6 +83,10 @@ trait ServerConfig extends FinatraServer {
   addFilter(new BasicAuthSupport(login, password))
 
   register(new UrlController with RedisSupport)
+
+  val port = System.getProperty("PORT", "7070")
+  System.setProperty("com.twitter.finatra.config.port", s":$port")
+  System.setProperty("com.twitter.finatra.config.adminPort", "")
 }
 
 object Server extends ServerConfig
