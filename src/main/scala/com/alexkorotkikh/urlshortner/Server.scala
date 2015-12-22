@@ -2,7 +2,7 @@ package com.alexkorotkikh.urlshortner
 
 import java.net.URL
 
-import com.top10.redis.SingleRedis
+import com.top10.redis.{Redis, SingleRedis}
 import com.twitter.finagle.http.{Request => FinagleRequest, Response => FinagleResponse}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finatra.{Controller, FinatraServer, ResponseBuilder}
@@ -57,7 +57,7 @@ class UrlController extends Controller {
 }
 
 trait RedisSupport {
-  protected val redis = new SingleRedis(
+  protected val redis: Redis = new SingleRedis(
     sys.env.getOrElse("REDIS_HOST", "localhost"),
     sys.env.getOrElse("REDIS_PORT", "6379").toInt,
     sys.env.get("REDIS_PWD")

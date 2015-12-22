@@ -1,6 +1,6 @@
 package com.alexkorotkikh.urlshortner
 
-import com.top10.redis.SingleRedis
+import com.top10.redis.{Redis, SingleRedis}
 import com.twitter.finatra.FinatraServer
 import com.twitter.finatra.test.SpecHelper
 import org.apache.commons.codec.binary.Base64
@@ -61,17 +61,14 @@ class UrlControllerSpec extends FlatSpec with SpecHelper with Matchers with Mock
   }
 
   trait TestRedisSupport extends RedisSupport {
-    override protected val redis: SingleRedis = stub[TestSingleRedis]
+    override protected val redis = stub[Redis]
 
     (redis get _) when "existingKey" returns Some("http://google.com")
     (redis exists _) when "existingKey" returns true
 
     (redis get _) when * returns None
     (redis exists _) when * returns false
-
   }
-
-  class TestSingleRedis extends SingleRedis(null)
 
   val DEFAULT_AUTH = Map("Authorization" -> ("Basic " + Base64.encodeBase64String("test:test".getBytes)))
   val WRONG_AUTH = Map("Authorization" -> ("Basic " + Base64.encodeBase64String("fail:fail".getBytes)))
