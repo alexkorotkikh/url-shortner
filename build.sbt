@@ -1,7 +1,3 @@
-import com.typesafe.sbt.SbtStartScript
-
-seq(SbtStartScript.startScriptForClassesSettings:_*)
-
 name := "url-shortner"
 
 version := "1.0"
@@ -19,4 +15,3 @@ libraryDependencies ++= Seq(
   "com.top10" %% "scala-redis-client" % "1.16.0",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2.1" % "test"
 )
-
